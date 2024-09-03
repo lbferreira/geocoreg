@@ -52,8 +52,7 @@ def coregistrate_timeseries(
         dst_img.sel({band_dim: registration_bands}).transpose(y_dim, x_dim, band_dim).to_numpy()
     )
     scr_timeseries_registered = scr_timeseries.transpose(time_dim, y_dim, x_dim, band_dim).copy()
-    # TODO: calling to_numpy() only to know the length of the time dimension is not efficient
-    for i in range(len(scr_timeseries[time_dim].to_numpy())):
+    for i in range(scr_timeseries[time_dim].shape[0]):
         scr_img = scr_timeseries.isel({time_dim: i}).transpose(y_dim, x_dim, band_dim)
         scr_img_registration_np = scr_img.sel({band_dim: registration_bands}).to_numpy()
         scr_img_np = scr_img.to_numpy()
