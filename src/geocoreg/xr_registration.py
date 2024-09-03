@@ -3,6 +3,11 @@ import xarray
 from . import registrators, registrator_factory
 
 
+def coregistrate_images():
+    # TODO: Implement this function to coregistrate a single pair of images.
+    pass
+
+
 def coregistrate_timeseries(
     scr_timeseries: xarray.DataArray,
     dst_img: xarray.DataArray,
