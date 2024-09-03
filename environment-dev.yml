@@ -1,0 +1,26 @@
+name: fastnanquantile-dev
+channels:
+    - conda-forge
+dependencies:
+    - python>=3.8
+    # required
+    - numpy
+    - xarray[parallel]
+    - scikit-learn
+    - scikit-image
+    
+    # testing
+    - pytest
+    - pytest-cov
+    - coverage
+    
+    # linting
+    - flake8
+
+    # styling
+    - black
+    #- pre-commit
+    - pip
+    - pip:
+        - kornia
+        - -e .
