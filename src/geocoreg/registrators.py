@@ -105,7 +105,7 @@ class PCCRegistrator(Registrator):
         return img
 
 
-class _KoniaRegistratorNanScaler:
+class _KorniaRegistratorNanScaler:
     """Helper class to normalize and denormalize image data.
     An offset is added to the normalized data to make sure all values are greater than zero.
     Zero is used to represent padding values"""
@@ -134,7 +134,7 @@ class _KoniaRegistratorNanScaler:
         return x
 
 
-class KoniaRegistrator(Registrator):
+class KorniaRegistrator(Registrator):
 
     def __init__(self, device_type: str = "cpu", **kwargs):
         """kwargs are passed to the ImageRegistrator constructor (kornia.geometry.ImageRegistrator).
@@ -168,7 +168,7 @@ class KoniaRegistrator(Registrator):
         src_img_nan_mask = np.isnan(src_img)
         src_img_nan_mask = K.image_to_tensor(src_img_nan_mask, None).float().to(self.device)
         src_img = np.nan_to_num(src_img, nan=0)
-        src_scaler = _KoniaRegistratorNanScaler()
+        src_scaler = _KorniaRegistratorNanScaler()
         src_img = src_scaler.fit_transform(src_img)
         scr_img = K.image_to_tensor(src_img, None).float().to(self.device)
 
@@ -200,7 +200,7 @@ class KoniaRegistrator(Registrator):
         img_min = np.quantile(img, 0.001)
         img_max = np.quantile(img, 0.999)
         img = img.clip(img_min, img_max)
-        img = _KoniaRegistratorNanScaler().fit_transform(img)
+        img = _KorniaRegistratorNanScaler().fit_transform(img)
         img = K.image_to_tensor(img, None).float().to(self.device)
         return img
 

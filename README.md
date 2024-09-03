@@ -2,7 +2,7 @@
 [![image](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/lbferreira/geocoreg/blob/main)
 # geocoreg
 A library to simplify the process of co-registering geospatial data.
-Althought some great libraries provide co-registration functionalities, such as scikit-image and konia, they don't directly support geospatial data. This library aims to provide a simple and easy-to-use interface to co-register geospatial data in a pythonic way. The library design was created to allow the user to select different co-registration methods available in other libraries. 
+Althought some great libraries provide co-registration functionalities, such as scikit-image and kornia, they don't directly support geospatial data. This library aims to provide a simple and easy-to-use interface to co-register geospatial data in a pythonic way. The library design was created to allow the user to select different co-registration methods available in other libraries. 
 
 ## Installation
 To install the package, run the command below

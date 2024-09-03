@@ -4,7 +4,7 @@ from . import registrators
 # Registrator factory provides registrator classes and kwargs
 registrator_factory: Dict[str, Tuple[registrators.Registrator, dict]] = {
     "pcc": (registrators.PCCRegistrator, {}),
-    "konia": (registrators.KoniaRegistrator, {}),
+    "kornia": (registrators.KorniaRegistrator, {}),
 }
 
 
