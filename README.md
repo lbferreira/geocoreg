@@ -13,12 +13,36 @@ pip install git+https://github.com/lbferreira/geocoreg
 ## Usage
 To coregister a single image or multiple images (e.g., a time series) in relation to a reference image, you can use the `coregister` function, as shown below.
 ```python
-from geocoreg import xr_coregistration as xcr
+import xarray
+import rioxarray
+from geocoreg import visualization as vz, xr_registration
 
-image_to_coregister = ... # Xarray DataArray it can be a single or multiple images
-reference_image = ... # Xarray DataArray
-coregistrated_image = xcr.coregistrate(image_to_coregister, reference_image, registration_bands=['red'])
+# Load sample data
+da = rioxarray.open_rasterio("naip_example.tif")
+da = da.assign_coords(band=['red', 'green', 'blue'])
+# Simulate a time series with some shifts
+shifted_series = xarray.concat(
+    [
+        da.assign_coords(time=0),
+        da.shift(x=10, y=10).assign_coords(time=1),
+        da.shift(x=-5, y=8).assign_coords(time=2),
+    ],
+    dim="time",
+)
+# Export a gif with the original series
+vz.export_animation(shifted_series, 'time', file_name='original_series.gif')
 ```
+<img src="./docs/registration_example/original_series.gif" alt="Original time series" style="max-width: 500px;">
+
+```python
+# Define the reference image as the first image of the time series
+dst_img = shifted_series.isel(time=0)
+# Coregistrate the time series with the reference image
+ts_registrated = xr_registration.coregistrate(shifted_series, dst_img, registrator='pcc', registration_bands=['red',])
+# Export a gif with the registrated series
+vz.export_animation(ts_registrated, 'time', file_name='registrated_series.gif')
+```
+<img src="./docs/registration_example/registrated_series.gif" alt="Registrated time series" style="max-width: 500px;">
 
 ## Acknowledgements
 This library was developed as part of
