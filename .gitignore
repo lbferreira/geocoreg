@@ -5,6 +5,12 @@
 # Geospacial data formats
 *.zarr/
 
+# Allow all file types in the docs folder
+!docs/**/*
+
+# Allow sample data in examples folder
+!examples/naip_example.tif
+
 ###### Python general ######
 
 # VS code.
