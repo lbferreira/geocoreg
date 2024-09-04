@@ -32,7 +32,7 @@ shifted_series = xarray.concat(
 # Export a gif with the original series
 vz.export_animation(shifted_series, 'time', file_name='original_series.gif')
 ```
-<img src="./docs/registration_example/original_series.gif" alt="Original time series" style="max-width: 500px;">
+<img src="./docs/registration_example/original_series.gif" alt="Original time series" style="width: 500px;">
 
 ```python
 # Define the reference image as the first image of the time series
@@ -42,7 +42,7 @@ ts_registrated = xr_registration.coregistrate(shifted_series, dst_img, registrat
 # Export a gif with the registrated series
 vz.export_animation(ts_registrated, 'time', file_name='registrated_series.gif')
 ```
-<img src="./docs/registration_example/registrated_series.gif" alt="Registrated time series" style="max-width: 500px;">
+<img src="./docs/registration_example/registrated_series.gif" alt="Registrated time series" style="width: 500px;">
 
 ## Acknowledgements
 This library was developed as part of
