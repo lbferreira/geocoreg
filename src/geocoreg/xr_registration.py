@@ -78,4 +78,6 @@ def coregistrate(
         if chunks is not None:
             scr_images_registered = scr_images_registered.chunk(chunks)
 
+    # Transpose back to the original dimension order
+    scr_images_registered = scr_images_registered.transpose(*scr_imgs.dims)
     return scr_images_registered
