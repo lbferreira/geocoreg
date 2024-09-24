@@ -41,13 +41,28 @@ class Registrator(ABC):
 
 class PCCRegistrator(Registrator):
 
-    def __init__(self, **kwargs):
-        """kwargs are passed to the function skimage.registration.phase_cross_correlation."""
+    def __init__(self, masked: bool = True, **kwargs):
+        """kwargs are passed to the function skimage.registration.phase_cross_correlation.
+
+        Args:
+            masked (bool, optional): If True and if reference_mask and moving_mask are provided as kwargs,
+            nan values in src_img and dst_img will be used as mask in PCC registration algorithm.
+            Using masked=True generally requires a longer execution time. Defaults to True.
+        """
+        self.masked = masked
         self.kwargs = kwargs
         # Initialize shift as None to indicate that it has not been created yet
         self.shift = None
 
     def register(self, src_img: np.ndarray, dst_img: np.ndarray) -> None:
+        # Mask is obtained from the first channel of the image.
+        # In geospatial images, nodata values are usually common across all channels.
+        if self.masked and "reference_mask" not in self.kwargs and "moving_mask" not in self.kwargs:
+            reference_mask = np.invert(np.isnan(dst_img)[:, :, 0])
+            moving_mask = np.invert(np.isnan(dst_img)[:, :, 0])
+            self.kwargs["reference_mask"] = reference_mask
+            self.kwargs["moving_mask"] = moving_mask
+
         src_img = self._prepare_registration_image(src_img)
         dst_img = self._prepare_registration_image(dst_img)
         # Coregistration
@@ -57,8 +72,9 @@ class PCCRegistrator(Registrator):
         assert (
             self.shift is not None
         ), "You must call the register method before calling this method."
+        # TODO: scipy.ndimage.shift could be used to apply subpixel shifts
 
-        # Apply shift using slice
+        # Apply pixel shift using slice
         shift = np.round(self.shift).astype(int)
         x_shift, y_shift = shift
         y_ini = 0
