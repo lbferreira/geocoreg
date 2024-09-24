@@ -32,6 +32,8 @@ def coregistrate(
     Returns:
         xarray.DataArray: Coregistrated timeseries.
     """
+    # TODO: check if it is really necessary to force the input to be a float dtype
+    assert np.issubdtype(scr_imgs.dtype, np.floating), "scr_imgs must have a floating point dtype."
     assert (
         x_dim in scr_imgs.dims and y_dim in scr_imgs.dims and band_dim in scr_imgs.dims
     ), "scr_imgs must have at least the dimensions x, y, and band."
