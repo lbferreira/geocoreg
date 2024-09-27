@@ -1,4 +1,4 @@
-name: fastnanquantile-dev
+name: geocoreg-dev
 channels:
     - conda-forge
 dependencies:
