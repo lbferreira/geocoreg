@@ -4,6 +4,8 @@
 A library to simplify the process of co-registering geospatial data.
 Althought some great libraries provide co-registration functionalities, such as scikit-image and kornia, they don't directly support geospatial data. This library aims to provide a simple and easy-to-use interface to co-register geospatial data in a pythonic way. The library design was created to allow the user to select different co-registration methods from different back-end libraries. For an easier utilization, Xarray DataArrays are supported (dask is not supported yet).
 
+Warning: This library is still in early development and the API may change.
+
 ## Installation
 To install the package, run the command below
 ```
