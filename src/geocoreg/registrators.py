@@ -1,3 +1,4 @@
+from typing import Optional
 import numpy as np
 import kornia as K
 import kornia.geometry as KG
@@ -41,15 +42,16 @@ class Registrator(ABC):
 
 class PCCRegistrator(Registrator):
 
-    def __init__(self, masked: bool = True, max_shift: int = 3, **kwargs):
+    def __init__(self, masked: bool = True, max_shift: Optional[int] = None, **kwargs):
         """kwargs are passed to the function skimage.registration.phase_cross_correlation.
 
         Args:
             masked (bool, optional): If True and if reference_mask and moving_mask are provided as kwargs,
             nan values in src_img and dst_img will be used as mask in PCC registration algorithm. Using masked=True
             generally requires a longer execution time. Defaults to True.
-            max_shift (int, optional): Maximum shift allowed in pixels. To avoid unexpected results, if a shift
-            greater than max_shift is detected, the shift is disregarded and set to 0. Defaults to 3.
+            max_shift (Optional[int], optional): Maximum shift allowed in pixels. To avoid unexpected results, if a shift
+            greater than max_shift is detected, the shift is disregarded and set to 0. If max_shift equals None, no
+            maximum shift is enforced. Defaults to None.
         """
         self.masked = masked
         self.max_shift = max_shift
@@ -77,11 +79,33 @@ class PCCRegistrator(Registrator):
         ), "You must call the register method before calling this method."
         # TODO: scipy.ndimage.shift could be used to apply subpixel shifts
 
-        # Apply pixel shift using slice
+        # Warp image based on the pixel-level shift
         shift = np.round(self.shift).astype(int)
         x_shift, y_shift = shift
-        if x_shift > self.max_shift or y_shift > self.max_shift:
+        if self.max_shift is not None and (x_shift > self.max_shift or y_shift > self.max_shift):
             x_shift, y_shift = 0, 0
+        scr_img_registered = self._warp_translation_pixel(src_img, x_shift, y_shift)
+        return scr_img_registered
+
+    # ----------------- Private methods ----------------- #
+    def _prepare_registration_image(self, img: np.ndarray) -> np.ndarray:
+        img = np.nan_to_num(img, nan=0)
+        if img.shape[2] > 1:
+            img = _apply_pca(img)
+        else:
+            img = img[:, :, 0]
+        img = filters.sobel(img)
+        img_min = np.quantile(img, 0.001)
+        img_max = np.quantile(img, 0.999)
+        img = img.clip(img_min, img_max)
+        return img
+
+    def _warp_translation_pixel(
+        self, src_img: np.ndarray, x_shift: int, y_shift: int
+    ) -> np.ndarray:
+        # Copy the image to avoid modifying the original
+        src_img = src_img.copy()
+        # Apply the shift
         y_ini = 0
         y_end = -1
         x_ini = 0
@@ -104,26 +128,12 @@ class PCCRegistrator(Registrator):
             x_ini_replacement = y_shift
 
         from_origin = src_img[y_ini:y_end, x_ini:x_end]
-        scr_img_registered = np.zeros_like(src_img)
-        scr_img_registered[...] = np.nan
-        scr_img_registered[
-            y_ini_replacement:y_end_replacement, x_ini_replacement:x_end_replacement
-        ] = from_origin
-
-        return scr_img_registered
-
-    # ----------------- Private methods ----------------- #
-    def _prepare_registration_image(self, img: np.ndarray) -> np.ndarray:
-        img = np.nan_to_num(img, nan=0)
-        if img.shape[2] > 1:
-            img = _apply_pca(img)
-        else:
-            img = img[:, :, 0]
-        img = filters.sobel(img)
-        img_min = np.quantile(img, 0.001)
-        img_max = np.quantile(img, 0.999)
-        img = img.clip(img_min, img_max)
-        return img
+        scr_img_warped = np.zeros_like(src_img)
+        scr_img_warped[...] = np.nan
+        scr_img_warped[y_ini_replacement:y_end_replacement, x_ini_replacement:x_end_replacement] = (
+            from_origin
+        )
+        return scr_img_warped
 
 
 class _KorniaRegistratorNanScaler:
