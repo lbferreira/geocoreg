@@ -41,15 +41,18 @@ class Registrator(ABC):
 
 class PCCRegistrator(Registrator):
 
-    def __init__(self, masked: bool = True, **kwargs):
+    def __init__(self, masked: bool = True, max_shift: int = 3, **kwargs):
         """kwargs are passed to the function skimage.registration.phase_cross_correlation.
 
         Args:
             masked (bool, optional): If True and if reference_mask and moving_mask are provided as kwargs,
-            nan values in src_img and dst_img will be used as mask in PCC registration algorithm.
-            Using masked=True generally requires a longer execution time. Defaults to True.
+            nan values in src_img and dst_img will be used as mask in PCC registration algorithm. Using masked=True
+            generally requires a longer execution time. Defaults to True.
+            max_shift (int, optional): Maximum shift allowed in pixels. To avoid unexpected results, if a shift
+            greater than max_shift is detected, the shift is disregarded and set to 0. Defaults to 3.
         """
         self.masked = masked
+        self.max_shift = max_shift
         self.kwargs = kwargs
         # Initialize shift as None to indicate that it has not been created yet
         self.shift = None
@@ -77,6 +80,8 @@ class PCCRegistrator(Registrator):
         # Apply pixel shift using slice
         shift = np.round(self.shift).astype(int)
         x_shift, y_shift = shift
+        if x_shift > self.max_shift or y_shift > self.max_shift:
+            x_shift, y_shift = 0, 0
         y_ini = 0
         y_end = -1
         x_ini = 0
