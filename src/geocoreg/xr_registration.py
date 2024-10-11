@@ -8,7 +8,7 @@ def coregistrate(
     scr_imgs: xarray.DataArray,
     dst_img: xarray.DataArray,
     registrator: Union[str, registrators.Registrator] = "pcc",
-    registration_bands: Optional[List[str]] = None,
+    registration_band: Union[str, List[str], None] = None,
     x_dim: str = "x",
     y_dim: str = "y",
     band_dim: str = "band",
@@ -23,7 +23,7 @@ def coregistrate(
         scr_imgs (xarray.DataArray): images (a single one or multiple) to be coregistrated in relation to the reference image.
         dst_img (xarray.DataArray): image to be used as reference.
         registrator (Union[str, registrators.Registrator], optional): a str defining the registrator to be used or a registrators.Registrator object. Check registrator_factory.get_available_registrators() to see valid string values. Defaults to "pcc".
-        registration_bands (Optional[List[str]], optional): bands to be used in the registration. Defaults to None.
+        registration_band (Union[str, List[str], None], optional): band(s) to be used in the registration. Defaults to None.
         x_dim (str, optional): name of the x dimension. Defaults to "x".
         y_dim (str, optional): name of the y dimension. Defaults to "y".
         band_dim (str, optional): name of the band dimension. Defaults to "band".
@@ -43,14 +43,16 @@ def coregistrate(
         band_dim,
     }, "dst_img must have only the dimensions x, y and band."
 
-    if registration_bands is None:
-        registration_bands = dst_img[band_dim].to_numpy().tolist()
+    if registration_band is None:
+        registration_band = dst_img[band_dim].to_numpy().tolist()
+    elif isinstance(registration_band, str):
+        registration_band = [registration_band]
 
     if isinstance(registrator, str):
         registrator = registrator_factory.build_registrator(registrator)
 
     dst_img_registration_np = (
-        dst_img.sel({band_dim: registration_bands}).transpose(y_dim, x_dim, band_dim).to_numpy()
+        dst_img.sel({band_dim: registration_band}).transpose(y_dim, x_dim, band_dim).to_numpy()
     )
 
     remaining_dims = set(scr_imgs.dims) - {x_dim, y_dim, band_dim}
@@ -58,7 +60,7 @@ def coregistrate(
 
     def generate_registrated_image(scr_img):
         scr_img = scr_img.transpose(y_dim, x_dim, band_dim)
-        scr_img_registration_np = scr_img.sel({band_dim: registration_bands}).to_numpy()
+        scr_img_registration_np = scr_img.sel({band_dim: registration_band}).to_numpy()
         scr_img_np = scr_img.to_numpy()
         registrator.register(scr_img_registration_np, dst_img_registration_np)
         scr_img_np_registered = registrator.warp_image(scr_img_np)

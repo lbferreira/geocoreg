@@ -40,7 +40,7 @@ vz.export_animation(shifted_series, 'time', file_name='original_series.gif')
 # Define the reference image as the first image of the time series
 dst_img = shifted_series.isel(time=0)
 # Coregistrate the time series with the reference image
-ts_registrated = xr_registration.coregistrate(shifted_series, dst_img, registrator='pcc', registration_bands=['red',])
+ts_registrated = xr_registration.coregistrate(shifted_series, dst_img, registrator='pcc', registration_band='red')
 # Export a gif with the registrated series
 vz.export_animation(ts_registrated, 'time', file_name='registrated_series.gif')
 ```
