@@ -6,7 +6,7 @@ import torch
 from skimage import filters
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
-from skimage.registration import phase_cross_correlation
+import skimage as ski
 
 from abc import ABC, abstractmethod
 
@@ -71,20 +71,19 @@ class PCCRegistrator(Registrator):
         src_img = self._prepare_registration_image(src_img)
         dst_img = self._prepare_registration_image(dst_img)
         # Coregistration
-        self.shift, error, diffphase = phase_cross_correlation(dst_img, src_img, **self.kwargs)
+        self.shift, error, diffphase = ski.registration.phase_cross_correlation(
+            dst_img, src_img, **self.kwargs
+        )
 
     def warp_image(self, src_img: np.ndarray) -> np.ndarray:
         assert (
             self.shift is not None
         ), "You must call the register method before calling this method."
-        # TODO: scipy.ndimage.shift could be used to apply subpixel shifts
 
-        # Warp image based on the pixel-level shift
-        shift = np.round(self.shift).astype(int)
-        x_shift, y_shift = shift
+        y_shift, x_shift = self.shift
         if self.max_shift is not None and (x_shift > self.max_shift or y_shift > self.max_shift):
             x_shift, y_shift = 0, 0
-        scr_img_registered = self._warp_translation_pixel(src_img, x_shift, y_shift)
+        scr_img_registered = self._warp_translation(src_img, x_shift, y_shift)
         return scr_img_registered
 
     # ----------------- Private methods ----------------- #
@@ -100,40 +99,9 @@ class PCCRegistrator(Registrator):
         img = img.clip(img_min, img_max)
         return img
 
-    def _warp_translation_pixel(
-        self, src_img: np.ndarray, x_shift: int, y_shift: int
-    ) -> np.ndarray:
-        # Copy the image to avoid modifying the original
-        src_img = src_img.copy()
-        # Apply the shift
-        y_ini = 0
-        y_end = -1
-        x_ini = 0
-        x_end = -1
-        y_ini_replacement = 0
-        y_end_replacement = -1
-        x_ini_replacement = 0
-        x_end_replacement = -1
-        if x_shift < 0:
-            y_ini = -1 * x_shift
-            y_end_replacement = -1 + x_shift
-        if x_shift > 0:
-            y_end = -1 - x_shift
-            y_ini_replacement = x_shift
-        if y_shift < 0:
-            x_ini = -1 * y_shift
-            x_end_replacement = -1 + y_shift
-        if y_shift > 0:
-            x_end = -1 - y_shift
-            x_ini_replacement = y_shift
-
-        from_origin = src_img[y_ini:y_end, x_ini:x_end]
-        scr_img_warped = np.zeros_like(src_img)
-        scr_img_warped[...] = np.nan
-        scr_img_warped[y_ini_replacement:y_end_replacement, x_ini_replacement:x_end_replacement] = (
-            from_origin
-        )
-        return scr_img_warped
+    def _warp_translation(self, src_img: np.ndarray, x_shift: int, y_shift: int) -> np.ndarray:
+        tform = ski.transform.EuclideanTransform(translation=(x_shift, y_shift))
+        return ski.transform.warp(src_img, tform.inverse, cval=np.nan, order=3)
 
 
 class _KorniaRegistratorNanScaler:
