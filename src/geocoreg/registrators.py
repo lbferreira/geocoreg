@@ -81,7 +81,9 @@ class PCCRegistrator(Registrator):
         ), "You must call the register method before calling this method."
 
         y_shift, x_shift = self.shift
-        if self.max_shift is not None and (x_shift > self.max_shift or y_shift > self.max_shift):
+        if self.max_shift is not None and (
+            abs(x_shift) > self.max_shift or abs(y_shift) > self.max_shift
+        ):
             x_shift, y_shift = 0, 0
         scr_img_registered = self._warp_translation(src_img, x_shift, y_shift)
         return scr_img_registered
